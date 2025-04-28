@@ -12,7 +12,6 @@ class PhotoService {
   }
 
   async createPhoto(photo: PhotoFormValues): Promise<Photo> {
-    console.log(photo);
     const response = await client.post(`/photos`, photo, {
       headers: {
         "Content-Type": "application/json",

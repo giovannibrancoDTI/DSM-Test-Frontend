@@ -51,6 +51,9 @@ const photoSlice = createSlice({
     clearPhotos(state) {
       state.photos = [];
     },
+    addPhoto(state, action: PayloadAction<Photo>) {
+      state.photos.push(action.payload);
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -63,10 +66,12 @@ const photoSlice = createSlice({
         (state, action: PayloadAction<Photo[]>) => {
           state.loading = false;
           const fetchedPhotos = action.payload;
+
           const existingIds = new Set(state.photos.map((photo) => photo.id));
           const newPhotos = fetchedPhotos.filter(
             (photo) => !existingIds.has(photo.id)
           );
+
           state.photos = [...state.photos, ...newPhotos];
         }
       )
@@ -80,6 +85,6 @@ const photoSlice = createSlice({
   },
 });
 
-export const { clearPhotos } = photoSlice.actions;
+export const { addPhoto, clearPhotos } = photoSlice.actions;
 
 export default photoSlice.reducer;

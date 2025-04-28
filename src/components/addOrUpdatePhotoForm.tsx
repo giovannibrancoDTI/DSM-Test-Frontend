@@ -12,13 +12,14 @@ import {
 import { Album } from "@/domain/types";
 import albumService from "@/services/albumService";
 import photoService from "@/services/photoService";
-import { createPhoto } from "@/shared/redux/slices/photoSlice";
-import { AppDispatch } from "@/shared/redux/store";
+import { addAlbum } from "@/shared/redux/slices/albumSlice";
+import { addPhoto } from "@/shared/redux/slices/photoSlice";
+import { AppDispatch, RootState } from "@/shared/redux/store";
+import { mergeApiAndLocalAlbums } from "@/shared/utils/mergeApiAndLocalAlbums";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { addAlbum } from "@/shared/redux/slices/albumSlice";
 
 const AddPhotoForm = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -35,23 +36,28 @@ const AddPhotoForm = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const localAlbums = useSelector((state: RootState) => state.albums.albums);
 
   useEffect(() => {
+    const fetchAlbums = async (userId: number) => {
+      try {
+        const response = await albumService.getAlbumsByUserId(userId);
+        const mergedAlbums = mergeApiAndLocalAlbums(
+          response,
+          localAlbums
+        ).filter((album: Album) => album.userId === userId);
+        setAlbums(mergedAlbums);
+      } catch (error) {
+        if (error instanceof Error) {
+          setError(error.message);
+        }
+      }
+    };
+
     if (userId) {
       fetchAlbums(Number(userId));
     }
-  }, [userId]);
-
-  const fetchAlbums = async (userId: number) => {
-    try {
-      const response = await albumService.getAlbumsByUserId(userId);
-      setAlbums(response);
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message);
-      }
-    }
-  };
+  }, [userId, localAlbums]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,9 +86,9 @@ const AddPhotoForm = () => {
           newAlbumTitle
         );
 
-        finalAlbumId = newAlbum.id;
+        finalAlbumId = Date.now(); // Use a unique ID for the new album
 
-        dispatch(addAlbum(newAlbum));
+        dispatch(addAlbum({ ...newAlbum, id: finalAlbumId }));
       }
 
       const newPhoto = {
@@ -93,7 +99,7 @@ const AddPhotoForm = () => {
       };
 
       const createdPhoto = await photoService.createPhoto(newPhoto);
-      dispatch(createPhoto(createdPhoto));
+      dispatch(addPhoto({ ...createdPhoto, id: Date.now() })); // Use a unique ID for the new photo
 
       setSuccess(true);
       setTimeout(
