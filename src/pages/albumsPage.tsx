@@ -6,14 +6,19 @@ import { Album } from "@/domain/types";
 import albumService from "@/services/albumService";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { RootState } from "@/shared/redux/store";
+import { mergeApiAndLocalAlbums } from "@/shared/utils/mergeApiAndLocalAlbums";
 
 const AlbumsPage = () => {
-  const [albums, setAlbums] = useState<Album[]>([]);
+  const [apiAlbums, setApiAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const userId = Number(useParams<{ userId: string }>().userId);
   const navigate = useNavigate();
+
+  const localAlbums = useSelector((state: RootState) => state.albums.albums);
 
   useEffect(() => {
     if (isNaN(userId)) {
@@ -27,7 +32,7 @@ const AlbumsPage = () => {
     setLoading(true);
     try {
       const response = await albumService.getAlbumsByUserId(userId);
-      setAlbums(response);
+      setApiAlbums(response);
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message as string);
@@ -40,6 +45,11 @@ const AlbumsPage = () => {
   const handleForm = () => {
     navigate(`/manager/${userId}`);
   };
+
+  const mergedAlbums = mergeApiAndLocalAlbums(apiAlbums, localAlbums).filter(
+    (album: Album) => album.userId === userId
+  );
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-4xl mx-auto">
@@ -61,7 +71,7 @@ const AlbumsPage = () => {
         {loading && <p>Loading...</p>}
         {error && <Alert message={error} variant="error" className="mb-4" />}
 
-        <AlbumsList albums={albums} />
+        <AlbumsList albums={mergedAlbums} />
       </div>
     </div>
   );

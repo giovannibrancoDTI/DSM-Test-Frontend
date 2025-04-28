@@ -15,10 +15,28 @@ const initialState: AlbumState = {
 };
 
 export const fetchAlbumsByUserId = createAsyncThunk(
-  "albums/fetchByUserId",
+  "albums/fetchAlbumsByUserId",
   async (userId: number, { rejectWithValue }) => {
     try {
       const response = await albumService.getAlbumsByUserId(userId);
+      return response;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue("An unknown error occurred");
+    }
+  }
+);
+
+export const createAlbum = createAsyncThunk(
+  "albums/createAlbum",
+  async (
+    { userId, title }: { userId: number; title: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await albumService.createAlbum(userId, title);
       return response;
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -33,11 +51,11 @@ const albumSlice = createSlice({
   name: "albums",
   initialState,
   reducers: {
-    addAlbum(state, action: PayloadAction<Album>) {
-      state.albums.push(action.payload);
-    },
     clearAlbums(state) {
       state.albums = [];
+    },
+    addAlbum(state, action: PayloadAction<Album>) {
+      state.albums.push(action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -50,12 +68,20 @@ const albumSlice = createSlice({
         fetchAlbumsByUserId.fulfilled,
         (state, action: PayloadAction<Album[]>) => {
           state.loading = false;
-          state.albums = action.payload;
+          const fetchedAlbums = action.payload;
+          const existingIds = new Set(state.albums.map((album) => album.id));
+          const newAlbums = fetchedAlbums.filter(
+            (album) => !existingIds.has(album.id)
+          );
+          state.albums = [...state.albums, ...newAlbums];
         }
       )
       .addCase(fetchAlbumsByUserId.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(createAlbum.fulfilled, (state, action: PayloadAction<Album>) => {
+        state.albums.push(action.payload);
       });
   },
 });

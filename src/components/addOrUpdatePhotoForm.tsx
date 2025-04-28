@@ -12,9 +12,13 @@ import {
 import { Album } from "@/domain/types";
 import albumService from "@/services/albumService";
 import photoService from "@/services/photoService";
+import { createPhoto } from "@/shared/redux/slices/photoSlice";
+import { AppDispatch } from "@/shared/redux/store";
 import clsx from "clsx";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
+import { addAlbum } from "@/shared/redux/slices/albumSlice";
 
 const AddPhotoForm = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -28,6 +32,7 @@ const AddPhotoForm = () => {
     [key: string]: boolean;
   }>({});
 
+  const dispatch = useDispatch<AppDispatch>();
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
 
@@ -74,7 +79,10 @@ const AddPhotoForm = () => {
           Number(userId),
           newAlbumTitle
         );
+
         finalAlbumId = newAlbum.id;
+
+        dispatch(addAlbum(newAlbum));
       }
 
       const newPhoto = {
@@ -84,10 +92,17 @@ const AddPhotoForm = () => {
         thumbnailUrl: URL.createObjectURL(file),
       };
 
-      await photoService.createPhoto(newPhoto);
+      const createdPhoto = await photoService.createPhoto(newPhoto);
+      dispatch(createPhoto(createdPhoto));
 
       setSuccess(true);
-      setTimeout(() => navigate(`/albums/${userId}`), 1500);
+      setTimeout(
+        () =>
+          navigate(`/${userId}/albums/`, {
+            replace: true,
+          }),
+        1500
+      );
     } catch (error) {
       if (error instanceof Error) {
         setError(error.message);

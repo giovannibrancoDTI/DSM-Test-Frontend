@@ -12,12 +12,10 @@ class PhotoService {
   }
 
   async createPhoto(photo: PhotoFormValues): Promise<Photo> {
-    const response = await client.post(`/photos`, {
-      photo: {
-        albumId: photo.albumId,
-        title: photo.title,
-        url: photo.url,
-        thumbnailUrl: photo.thumbnailUrl,
+    console.log(photo);
+    const response = await client.post(`/photos`, photo, {
+      headers: {
+        "Content-Type": "application/json",
       },
     });
 

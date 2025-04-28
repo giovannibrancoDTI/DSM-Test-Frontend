@@ -1,4 +1,4 @@
-import AddPhotoForm from "@/components/addPhotoForm";
+import AddPhotoForm from "@/components/addOrUpdatePhotoForm";
 
 const addOrUpdatePhotoPage = () => {
   return <AddPhotoForm />;

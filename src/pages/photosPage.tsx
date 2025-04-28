@@ -1,44 +1,34 @@
 import CustomBreadcrumb from "@/components/customBreadcrumb";
 import PhotoList from "@/components/photoList";
 import { Alert } from "@/components/ui/alert";
-import { Photo } from "@/domain/types";
-import photoService from "@/services/photoService";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "@/shared/redux/store";
+import { fetchPhotosByAlbumId } from "@/shared/redux/slices/photoSlice";
 
 const PhotosPage = () => {
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const { userId, albumId } = useParams<{
-    userId: string;
-    albumId: string;
-  }>();
-
+  const { userId, albumId } = useParams<{ userId: string; albumId: string }>();
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+
+  const { photos, loading, error } = useSelector(
+    (state: RootState) => state.photos
+  );
 
   useEffect(() => {
-    if (isNaN(Number(userId)) || isNaN(Number(albumId))) {
+    if (
+      !userId ||
+      !albumId ||
+      isNaN(Number(userId)) ||
+      isNaN(Number(albumId))
+    ) {
       navigate("/");
+      return;
     }
 
-    fetchPhotos(Number(albumId));
-  }, [userId, albumId, navigate]);
-
-  const fetchPhotos = async (albumId: number) => {
-    setLoading(true);
-    try {
-      const response = await photoService.getPhotosByAlbumId(albumId);
-      setPhotos(response);
-    } catch (error) {
-      if (error instanceof Error) {
-        setError(error.message as string);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    dispatch(fetchPhotosByAlbumId(Number(albumId)));
+  }, [userId, albumId, navigate, dispatch]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -46,8 +36,8 @@ const PhotosPage = () => {
         <CustomBreadcrumb
           crumbs={[
             { label: "Home", href: "/" },
-            { label: `Albums`, href: `/${userId}/albums/` },
-            { label: `Photos`, href: `/${userId}/albums/${albumId}/photos/` },
+            { label: "Albums", href: `/${userId}/albums/` },
+            { label: "Photos", href: `/${userId}/albums/${albumId}/photos/` },
           ]}
         />
 

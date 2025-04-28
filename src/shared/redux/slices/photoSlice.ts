@@ -29,13 +29,25 @@ export const fetchPhotosByAlbumId = createAsyncThunk(
   }
 );
 
+export const createPhoto = createAsyncThunk(
+  "photos/createPhoto",
+  async (photoData: Omit<Photo, "id">, { rejectWithValue }) => {
+    try {
+      const response = await photoService.createPhoto(photoData);
+      return response;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        return rejectWithValue(error.message);
+      }
+      return rejectWithValue("An unknown error occurred");
+    }
+  }
+);
+
 const photoSlice = createSlice({
   name: "photos",
   initialState,
   reducers: {
-    addPhoto(state, action: PayloadAction<Photo>) {
-      state.photos.push(action.payload);
-    },
     clearPhotos(state) {
       state.photos = [];
     },
@@ -50,16 +62,24 @@ const photoSlice = createSlice({
         fetchPhotosByAlbumId.fulfilled,
         (state, action: PayloadAction<Photo[]>) => {
           state.loading = false;
-          state.photos = action.payload;
+          const fetchedPhotos = action.payload;
+          const existingIds = new Set(state.photos.map((photo) => photo.id));
+          const newPhotos = fetchedPhotos.filter(
+            (photo) => !existingIds.has(photo.id)
+          );
+          state.photos = [...state.photos, ...newPhotos];
         }
       )
       .addCase(fetchPhotosByAlbumId.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(createPhoto.fulfilled, (state, action: PayloadAction<Photo>) => {
+        state.photos.push(action.payload);
       });
   },
 });
 
-export const { addPhoto, clearPhotos } = photoSlice.actions;
+export const { clearPhotos } = photoSlice.actions;
 
 export default photoSlice.reducer;

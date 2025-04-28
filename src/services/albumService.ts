@@ -12,10 +12,8 @@ class AlbumService {
 
   async createAlbum(userId: number, title: string): Promise<Album> {
     const response = await client.post(`/albums`, {
-      album: {
-        userId,
-        title,
-      },
+      userId,
+      title,
     });
 
     if (response.status !== 201) throw new Error("Failed to create album");
