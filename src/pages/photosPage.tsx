@@ -60,7 +60,10 @@ const PhotosPage = () => {
           </Button>
         )}
 
-        <PhotoList photos={filteredPhotos.sort((a, b) => a.id - b.id)} />
+        <PhotoList
+          canManager={userId === import.meta.env.VITE_USER_ID}
+          photos={filteredPhotos.sort((a, b) => a.id - b.id)}
+        />
       </div>
     </div>
   );

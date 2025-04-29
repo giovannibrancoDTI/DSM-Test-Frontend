@@ -2,32 +2,23 @@ import { Album } from "@/domain/types";
 import { useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "./ui/alert-dialog";
+import CustomAlertDialog from "./CustomAlertDialog";
 import { Card } from "./ui/card";
 
 interface IAlbumsListProps {
-  canManager: boolean;
   albums: Album[];
+  canManager: boolean;
   onDeleteAlbum: (albumId: number) => void;
 }
 
 const AlbumsList = ({
-  canManager,
   albums,
+  canManager,
   onDeleteAlbum,
 }: IAlbumsListProps) => {
   const navigate = useNavigate();
   const [albumToDelete, setAlbumToDelete] = useState<Album | null>(null);
+  const [showModal, setShowModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletedAlbums, setDeletedAlbums] = useState<number[]>(() => {
     const storedDeletedAlbums = localStorage.getItem("deletedAlbums");
@@ -48,6 +39,7 @@ const AlbumsList = ({
     event.stopPropagation();
     setAlbumToDelete(album);
     setIsDeleting(true);
+    setShowModal(true);
   };
 
   const handleCloseModal = () => {
@@ -87,55 +79,35 @@ const AlbumsList = ({
               className="bg-white shadow-md rounded-lg p-6 flex flex-col justify-between h-40 transition-transform transform hover:scale-105 hover:shadow-lg cursor-pointer"
             >
               <h2 className="text-xl font-semibold">{album.title}</h2>
-
               {canManager && (
-                <div className="flex justify-between items-center mt-4">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(album);
-                      }}
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <FaEdit />
-                    </button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <button
-                          onClick={(e) => handleDeleteClick(album, e)}
-                          className="hover:text-red-700 cursor-pointer"
-                        >
-                          <FaTrash />
-                        </button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            Are you absolutely sure?
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently
-                            delete your album and remove your data from our
-                            servers.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel onClick={handleCloseModal}>
-                            Cancel
-                          </AlertDialogCancel>
-                          <AlertDialogAction onClick={handleConfirmDelete}>
-                            Continue
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  </div>
+                <div className="flex justify-end gap-4 mt-4">
+                  <button
+                    onClick={() => handleEdit(album)}
+                    className="hover:text-blue-700"
+                  >
+                    <FaEdit size={20} />
+                  </button>
+                  <button
+                    onClick={(e) => handleDeleteClick(album, e)}
+                    className="hover:text-red-700"
+                  >
+                    <FaTrash size={20} />
+                  </button>
                 </div>
               )}
             </Card>
           ))}
         </div>
+      )}
+
+      {showModal && albumToDelete && (
+        <CustomAlertDialog
+          open={showModal}
+          title="Delete Album"
+          description="Are you sure you want to delete this album? This action cannot be undone."
+          onCancel={handleCloseModal}
+          onConfirm={handleConfirmDelete}
+        />
       )}
     </div>
   );
