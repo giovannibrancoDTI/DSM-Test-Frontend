@@ -2,7 +2,7 @@ import { Album } from "@/domain/types";
 import { useState } from "react";
 import { FaEdit, FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import CustomAlertDialog from "./CustomAlertDialog";
+import CustomAlertDialog from "./customAlertDialog";
 import { Card } from "./ui/card";
 
 interface IAlbumsListProps {
