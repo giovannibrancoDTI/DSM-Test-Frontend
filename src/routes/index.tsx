@@ -1,4 +1,4 @@
-import AddOrUpdatePhotoPage from "@/pages/addOrUpdatePhotoPage";
+import AddOrUpdatePhotoPage from "@/pages/addPhotoPage";
 import AlbumsPage from "@/pages/albumsPage";
 import PhotosPage from "@/pages/photosPage";
 import UsersPage from "@/pages/usersPage";

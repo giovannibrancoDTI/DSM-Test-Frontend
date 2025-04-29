@@ -46,6 +46,14 @@ const AlbumsPage = () => {
     navigate(`/manager/${userId}`);
   };
 
+  const handleDelete = (albumId: number) => {
+    const updatedAlbums = localAlbums.filter((album) => album.id !== albumId);
+    albumService.deleteAlbum(albumId).then(() => {
+      setApiAlbums(updatedAlbums);
+    });
+    navigate(0);
+  };
+
   const mergedAlbums = mergeApiAndLocalAlbums(apiAlbums, localAlbums).filter(
     (album: Album) => album.userId === userId
   );
@@ -71,7 +79,11 @@ const AlbumsPage = () => {
         {loading && <p>Loading...</p>}
         {error && <Alert message={error} variant="error" className="mb-4" />}
 
-        <AlbumsList albums={mergedAlbums} />
+        <AlbumsList
+          canManager={userId === Number(import.meta.env.VITE_USER_ID)}
+          albums={mergedAlbums}
+          onDeleteAlbum={handleDelete}
+        />
       </div>
     </div>
   );
