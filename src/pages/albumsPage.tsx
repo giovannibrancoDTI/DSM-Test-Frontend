@@ -9,6 +9,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "@/shared/redux/store";
 import { mergeApiAndLocalAlbums } from "@/shared/utils/mergeApiAndLocalAlbums";
+import useManagerAlbumAndPhotos from "@/hooks/useManagerAlbumAndPhotos";
 
 const AlbumsPage = () => {
   const [apiAlbums, setApiAlbums] = useState<Album[]>([]);
@@ -17,6 +18,7 @@ const AlbumsPage = () => {
 
   const userId = Number(useParams<{ userId: string }>().userId);
   const navigate = useNavigate();
+  const { canManager } = useManagerAlbumAndPhotos(userId.toString());
 
   const localAlbums = useSelector((state: RootState) => state.albums.albums);
 
@@ -70,7 +72,7 @@ const AlbumsPage = () => {
 
         <h1 className="text-3xl font-bold mb-4">Album List</h1>
 
-        {userId === Number(import.meta.env.VITE_USER_ID) && (
+        {canManager() && (
           <Button onClick={handleForm} variant="default" className="mb-4">
             Add or update photo
           </Button>
@@ -80,7 +82,7 @@ const AlbumsPage = () => {
         {error && <Alert message={error} variant="error" className="mb-4" />}
 
         <AlbumsList
-          canManager={userId === Number(import.meta.env.VITE_USER_ID)}
+          canManager={canManager()}
           albums={mergedAlbums}
           onDeleteAlbum={handleDelete}
         />

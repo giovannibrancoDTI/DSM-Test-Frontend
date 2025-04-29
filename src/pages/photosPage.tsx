@@ -7,11 +7,13 @@ import CustomBreadcrumb from "@/components/customBreadcrumb";
 import PhotoList from "@/components/photoList";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import useManagerAlbumAndPhotos from "@/hooks/useManagerAlbumAndPhotos";
 
 const PhotosPage = () => {
   const { userId, albumId } = useParams<{ userId: string; albumId: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const { canManager } = useManagerAlbumAndPhotos(userId as string);
 
   const { photos, loading, error } = useSelector(
     (state: RootState) => state.photos
@@ -54,16 +56,13 @@ const PhotosPage = () => {
         {loading && <p>Loading...</p>}
         {error && <Alert message={error} variant="error" className="mb-4" />}
 
-        {userId === import.meta.env.VITE_USER_ID && (
+        {canManager() && (
           <Button onClick={handleForm} variant="default" className="mb-4">
             Add or update photo
           </Button>
         )}
 
-        <PhotoList
-          canManager={userId === import.meta.env.VITE_USER_ID}
-          photos={filteredPhotos.sort((a, b) => a.id - b.id)}
-        />
+        <PhotoList canManager={canManager()} photos={filteredPhotos} />
       </div>
     </div>
   );
